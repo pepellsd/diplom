@@ -7,7 +7,7 @@ class VKClient:
     def __init__(self):
         self.client_session = VkApi('+79851580865', 'barongandon89')
 
-    async def set_credentials(self, login: str, password: str):
+    def set_credentials(self, login: str, password: str):
         self.client_session.login = login
         self.client_session.password = password
         try:
@@ -17,20 +17,20 @@ class VKClient:
             return False
 
     @property
-    async def auth_get_api(self) -> VkApiMethod:
+    def auth_get_api(self) -> VkApiMethod:
         self.client_session.auth()
         return self.client_session.get_api()
 
-    async def set_new_status(self):
-        vk = await self.auth_get_api
+    def set_new_status(self):
+        vk = self.auth_get_api
         vk.status.set(text='я не курю 5 дней')
     
-    async def post_on_wall(self):
+    def post_on_wall(self):
         message = '''
         это первый день когда я начал бороться с курением,
         следите за обновлениями в моём статусе 
         '''
-        vk = await self.auth_get_api
+        vk = self.auth_get_api
         vk.wall.post(message=message)
 
 

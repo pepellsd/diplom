@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from sqlalchemy import String, BigInteger, DateTime, Integer
+from sqlalchemy import String, BigInteger, DateTime, Integer, Boolean
 from sqlalchemy import Column, UniqueConstraint, ForeignKey
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
 
 from app.services.database.base import Base
@@ -27,7 +28,8 @@ class Statistic(Base):
     id = Column(BigInteger, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'))
     time_stamp = Column(DateTime, default=datetime.utcnow())
-    mio_value = Column(Integer)
+    mio_values = Column(ARRAY(Integer))
+    status = Column(Boolean)
 
     def __str__(self):
-        return self.mio_value
+        return f"{self.user_id}: {self.status}"

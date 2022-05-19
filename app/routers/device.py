@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Depends
 from fastapi.background import BackgroundTasks
 from fastapi.responses import JSONResponse
@@ -28,6 +29,7 @@ async def analyze_mio_activity(
         stat_repo: StatisticRepository = Depends(get_repository(StatisticRepository)),
         user_repo: UserRepository = Depends(get_repository(UserRepository))
 ):
+    # space for machine learning model
     background_task.add_task(stat_repo.create_stat, mio_value=mio_value, user_id=user_id)
     return MachineResponse(status_smoke=True)  # late
 
@@ -39,7 +41,9 @@ async def register_device(
     vk_client: VKClient = Depends(get_vk_client_stub),
     user_repo: UserRepository = Depends(get_repository(UserRepository)),
 ):
-    if not await vk_client.set_credentials(login=data.vk_login, password=data.vk_password):
+    loop = asyncio.get_running_loop()
+    is_auth = await loop.run_in_executor(None, vk_client.set_credentials, data.vk_login, data.vk_password)
+    if is_auth is False:
         return JSONResponse(status_code=400, content={'message': 'wrong password for vk account'})
     user = await user_repo.create_user(data.vk_login, data.vk_password)
     if user is None:
