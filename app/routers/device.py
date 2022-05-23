@@ -1,7 +1,10 @@
 import asyncio
+import datetime
 from fastapi import APIRouter, Depends
 from fastapi.background import BackgroundTasks
 from fastapi.responses import JSONResponse
+from typing import List
+from clepsydra import create_async_scheduler, IntervalRule
 
 from app.services.database.base import get_repository
 from app.schemas import RegisterDevice, MachineResponse
@@ -24,13 +27,12 @@ router = APIRouter(
     response_model=MachineResponse
 )
 async def analyze_mio_activity(
-        mio_value: int, user_id: str,
+        mio_values: List[int], user_id: int,
         background_task: BackgroundTasks,
-        stat_repo: StatisticRepository = Depends(get_repository(StatisticRepository)),
-        user_repo: UserRepository = Depends(get_repository(UserRepository))
+        stat_repo: StatisticRepository = Depends(get_repository(StatisticRepository))
 ):
     # space for machine learning model
-    background_task.add_task(stat_repo.create_stat, mio_value=mio_value, user_id=user_id)
+    background_task.add_task(stat_repo.create_stat, mio_values=mio_values, user_id=user_id, status=False)
     return MachineResponse(status_smoke=True)  # late
 
 
@@ -51,3 +53,37 @@ async def register_device(
     background_task.add_task(vk_client.post_on_wall)
     return JSONResponse(status_code=201, content={'message': 'user successfully create', 'user_id': user.id})
 
+
+async def check_users_for_achievements(
+        user_repo: UserRepository = Depends(get_repository(UserRepository)),
+        loop: asyncio.AbstractEventLoop = asyncio.get_running_loop(),
+        vk_client: VKClient = Depends(get_vk_client_stub)
+):
+    users = await user_repo.get_users()
+    for user in users:
+        loop.run_in_executor(None, vk_client.set_credentials, user.vk_login, user.vk_password)
+        if len(user.statistics) > 0:
+            for stat in user.statistics:
+                if stat.status is True:
+                    loop.run_in_executor(None, vk_client.set_new_status, "я все таки покурил")
+                    break
+            no_smoke_count = user.no_smoke_count + 1
+            await user_repo.update_user_smoke_count(user_id=user.id, no_smoke_count=no_smoke_count)
+            loop.run_in_executor(None, vk_client.set_new_status, f'я  не курю уже {no_smoke_count} день/дня/дней')
+        else:
+            no_smoke_count = user.no_smoke_count + 1
+            await user_repo.update_user_smoke_count(user_id=user.id, no_smoke_count=no_smoke_count)
+            loop.run_in_executor(None, vk_client.set_new_status, f'я  не курю уже {no_smoke_count} день/дня/дней')
+
+
+@router.on_event("startup")
+async def startup_event():
+    scheduler = create_async_scheduler()
+    await scheduler.add_job(
+        'check_users_for_achievements',
+        rule=IntervalRule(
+            start=datetime.datetime.now(),
+            period=datetime.timedelta(days=1)
+        )
+    )
+    await scheduler.run()

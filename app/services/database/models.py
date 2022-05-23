@@ -1,3 +1,4 @@
+import pytz
 from datetime import datetime
 
 from sqlalchemy import String, BigInteger, DateTime, Integer, Boolean
@@ -14,7 +15,8 @@ class User(Base):
     id = Column(BigInteger, primary_key=True, index=True)
     vk_login = Column(String, index=True)
     vk_password = Column(String, nullable=False)
-    statistics = relationship('Statistic', passive_deletes=True)
+    no_smoke_count = Column(Integer, default=0)
+    statistics = relationship('Statistic', cascade='all,delete', passive_deletes=True)
 
     __table_args__ = (UniqueConstraint('vk_login', 'vk_password'))
 
@@ -27,7 +29,7 @@ class Statistic(Base):
 
     id = Column(BigInteger, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'))
-    time_stamp = Column(DateTime, default=datetime.utcnow())
+    time_stamp = Column(DateTime, default=datetime.now(tz=pytz.timezone("Europe/Moscow")))
     mio_values = Column(ARRAY(Integer))
     status = Column(Boolean)
 

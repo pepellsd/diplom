@@ -21,9 +21,9 @@ class VKClient:
         self.client_session.auth()
         return self.client_session.get_api()
 
-    def set_new_status(self):
+    def set_new_status(self, text: str):
         vk = self.auth_get_api
-        vk.status.set(text='я не курю 5 дней')
+        vk.status.set(text=text)
     
     def post_on_wall(self):
         message = '''
