@@ -42,9 +42,9 @@ class UserRepository(BaseRepository):
             extract("day", Statistic.time_stamp) == today.day
         )
         result = await self.db.execute(stmt)
-        return result.scalar().all()
+        return result.unique().scalars().all()
 
     async def update_user_smoke_count(self, user_id: int, no_smoke_count: int):
         stmt = update(User).where(User.id == user_id).values({User.no_smoke_count: no_smoke_count})
         await self.db.execute(stmt)
-
+        await self.db.commit()

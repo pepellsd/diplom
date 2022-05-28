@@ -9,7 +9,7 @@ class Rule(Protocol):
 
 
 @dataclass
-class IntervalRule(Rule):
+class IntervalRule:
     start: datetime
     period: timedelta
 

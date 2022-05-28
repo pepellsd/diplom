@@ -1,6 +1,7 @@
 import datetime
 
 from pydantic import BaseModel
+from typing import List
 
 
 class MachineResponse(BaseModel):
@@ -10,6 +11,11 @@ class MachineResponse(BaseModel):
 class RegisterDevice(BaseModel):
     vk_login: str
     vk_password: str
+
+
+class AnalyzeMioActivity(BaseModel):
+    user_id: int
+    mio_values: List[int]
 
 
 class UserSchema(BaseModel):

@@ -3,9 +3,13 @@ from vk_api.vk_api import VkApiMethod
 from vk_api.exceptions import BadPassword
 
 
+class EmptyCredentials(Exception):
+    pass
+
+
 class VKClient:
-    def __init__(self):
-        self.client_session = VkApi('+79851580865', 'barongandon89')
+    def __init__(self, login: str = None, password: str = None):
+        self.client_session = VkApi(login=login, password=password)
 
     def set_credentials(self, login: str, password: str):
         self.client_session.login = login
@@ -18,6 +22,8 @@ class VKClient:
 
     @property
     def auth_get_api(self) -> VkApiMethod:
+        if self.client_session.login is None or self.client_session.password is None:
+            raise EmptyCredentials("call {0}set_credentials".format(self.__class__.__name__))
         self.client_session.auth()
         return self.client_session.get_api()
 
