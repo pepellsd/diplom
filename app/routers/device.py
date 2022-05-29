@@ -28,10 +28,10 @@ router = APIRouter(
     response_model=MachineResponse
 )
 async def analyze_mio_activity(
-        data: AnalyzeMioActivity,
-        background_task: BackgroundTasks,
-        stat_repo: StatisticRepository = Depends(get_repository(StatisticRepository)),
-        clf: Any = Depends(get_machine_learning_model_stub)
+    data: AnalyzeMioActivity,
+    background_task: BackgroundTasks,
+    stat_repo: StatisticRepository = Depends(get_repository(StatisticRepository)),
+    clf: Any = Depends(get_machine_learning_model_stub)
 ):
     smoke_status = clf.predict(data.mio_values)
     background_task.add_task(

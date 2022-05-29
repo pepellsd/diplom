@@ -3,16 +3,22 @@ version: '3.9'
 services:
   smoking_api:
     build: .
-    command: sh -c " python run_server.py"
+    command: sh -c "alembic upgrade head && python run_server.py"
+    env_file:
+      ./.env.dev
     depends_on:
       - database
     ports:
       - '8000:8000'
   database:
-    image: mongo
-    restart: always
-    ports:
-      - '27017:27017'
+    image: postgres:13-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    expose:
+      - 5432
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root
+      - POSTGRES_USER=mio_client
+      - POSTGRES_PASSWORD=123
+      - POSTGRES_DB=mio_statistic
+volumes:
+  postgres_data:
