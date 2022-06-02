@@ -17,8 +17,8 @@ async def check_users_for_achievements(context: Context):
     VkClient = context.data["vk_client_class_ref"]
     users = await user_repo.get_users()
     for user in users:
-        vk_client = VkClient(login=user.vk_login, password=user.vk_password)
         if len(user.statistics) > 0:
+            vk_client = VkClient(login=user.vk_login, password=user.vk_password)
             smoke_status = False
             for stat in user.statistics:
                 if stat.status is True:
@@ -31,10 +31,6 @@ async def check_users_for_achievements(context: Context):
                 no_smoke_count = user.no_smoke_count + 1
                 await user_repo.update_user_smoke_count(user_id=user.id, no_smoke_count=no_smoke_count)
                 loop.run_in_executor(None, vk_client.set_new_status, f'я  не курю уже {no_smoke_count} день/дня/дней')
-        else:
-            no_smoke_count = user.no_smoke_count + 1
-            await user_repo.update_user_smoke_count(user_id=user.id, no_smoke_count=no_smoke_count)
-            loop.run_in_executor(None, vk_client.set_new_status, f'я  не курю уже {no_smoke_count} день/дня/дней')
     await user_repo.db.close()
 
 
